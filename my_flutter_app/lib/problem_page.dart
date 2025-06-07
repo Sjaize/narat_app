@@ -29,12 +29,8 @@ class _ProblemPageState extends State<ProblemPage> {
             label: '홈',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border), // 하트 아이콘 (Outline 버전 사용)
-            label: '찜',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_bag_outlined), // 가방 아이콘 (Outline 버전 사용)
-            label: '가방',
+            icon: Icon(Icons.check_box), // 하트 아이콘을 체크 박스 아이콘으로 변경
+            label: '오답노트', // '찜'을 '오답노트'로 변경
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings), // 설정 아이콘
