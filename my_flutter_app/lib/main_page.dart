@@ -10,37 +10,24 @@ class MainPage extends StatelessWidget {
       backgroundColor: const Color(0xFFFFF8E2), // 온보딩/로그인 페이지와 동일한 배경색 사용
       body: Column(
         children: <Widget>[
-          // 고정된 상단 헤더 영역 (이미지, 구분선, 배경, 그림자)
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF8E2), // 배경색 유지
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.5), // 그림자 색상 및 투명도
-                  spreadRadius: 1, // 그림자 확산 반경
-                  blurRadius: 5, // 그림자 흐림 반경
-                  offset: const Offset(0, 3), // 그림자 위치 (수직 방향으로 아래쪽)
-                ),
-              ],
-            ),
-            child: SafeArea( // 헤더 콘텐츠에만 SafeArea 적용하여 상태 표시줄 아래 배치
-              bottom: false, // 하단 시스템 바 영역은 피하지 않음
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0), // 원래 수직 패딩 유지
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 상단 이미지 (onboarding.png)
-                    Center(
-                      child: Image.asset(
-                        'assets/images/onboarding.png', // 이미지 파일 경로
-                        height: 40.0, // 이미지 높이 유지
-                      ),
+          // 헤더 콘텐츠 (기존 헤더 영역에서 분리)
+          SafeArea( // 헤더 콘텐츠에만 SafeArea 적용하여 상태 표시줄 아래 배치
+            bottom: false, // 하단 시스템 바 영역은 피하지 않음
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0), // 원래 수직 패딩 유지
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 상단 이미지 (onboarding.png)
+                  Center(
+                    child: Image.asset(
+                      'assets/images/onboarding.png', // 이미지 파일 경로
+                      height: 50.0, // 이미지 높이 키움
                     ),
-                    const SizedBox(height: 16.0), // 이미지와 구분선 사이 간격 유지
-                    const Divider(height: 1.0, thickness: 0.5, color: Colors.grey), // 상단 얇은 구분선 유지
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 18.0), // 이미지와 구분선 사이 간격 조정
+                  const Divider(height: 1.0, thickness: 0.5, color: Colors.grey), // 새로운 구분선 추가
+                ],
               ),
             ),
           ),
@@ -49,8 +36,9 @@ class MainPage extends StatelessWidget {
           Expanded(
             child: SafeArea(
               bottom: false, // 하단 시스템 바 영역까지 콘텐츠 확장
+              top: false, // 상단 시스템 바 영역 패딩 제거
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0), // 좌우 및 상하 여백 적용
+                padding: const EdgeInsets.symmetric(horizontal: 48.0, vertical: 18.0), // 좌우 및 상하 여백 조정 (아래로 내림)
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -63,14 +51,14 @@ class MainPage extends StatelessWidget {
                         //   backgroundColor: Colors.grey[300],
                         //   child: Icon(Icons.person, size: 30, color: Colors.grey[600]),
                         // ),
-                        const SizedBox(width: 16.0), // 아이콘과 텍스트 사이 간격
+                        const SizedBox(width: 8.0), // 아이콘과 텍스트 사이 간격
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: const [
                             Text(
                               '{USER_NICKNAME} 님, 반가워요',
                               style: TextStyle(
-                                fontSize: 20, // 원래 크기 유지
+                                fontSize: 14, // 텍스트 크기 줄임
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF2D2A1E),
                               ),
@@ -80,7 +68,7 @@ class MainPage extends StatelessWidget {
                       ],
                     ),
 
-                    const SizedBox(height: 24.0), // 사용자 정보와 다음 섹션 간 간격
+                    const SizedBox(height: 12.0), // 사용자 정보와 다음 섹션 간 간격 조정
 
                     // 누적 학습 현황 카드
                     Card(
@@ -182,7 +170,7 @@ class MainPage extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 24.0), // 누적 학습 현황 카드와 다음 섹션 간 간격
+                    const SizedBox(height: 24.0), // 누적 학습 현황 카드와 다음 섹션 간 간격 조정
 
                     // 최근에 틀린 문장 섹션
                     Card(
@@ -215,7 +203,7 @@ class MainPage extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 24.0), // 최근에 틀린 문장 카드와 다음 섹션 간 간격
+                    const SizedBox(height: 24.0), // 최근에 틀린 문장 카드와 다음 섹션 간 간격 조정
 
                     // 카테고리별/난이도별 학습현황 섹션 (나란히 배치)
                     Row(
@@ -281,7 +269,7 @@ class MainPage extends StatelessWidget {
                       ],
                     ),
 
-                    const SizedBox(height: 20.0), // 학습 현황 카드와 버튼 간 간격 줄임
+                    const SizedBox(height: 24.0), // 학습 현황 카드와 버튼 간 간격 조정
 
                     // 오늘의 문제 풀어보기 버튼
                     ElevatedButton(
@@ -343,7 +331,7 @@ class MainPage extends StatelessWidget {
         selectedItemColor: const Color(0xFF2D2A1E), // 선택된 아이템 색상 (이미지 기반)
         unselectedItemColor: const Color(0xFF8B6E4E), // 선택되지 않은 아이템 색상 (이미지 기반)
         backgroundColor: const Color(0xFFFFF8E2), // 네비게이션 바 배경색 (이미지 기반)
-        iconSize: 30.0, // 아이콘 크기 늘리기
+        iconSize: 25.0, // 아이콘 크기 늘리기
         onTap: (index) {
           // TODO: 탭 전환 로직 구현
         },
