@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'result_page.dart'; // 결과 페이지 임포트
 
+enum AnswerStatus {
+  correct,
+  incorrect,
+}
+
 class ProblemPage extends StatefulWidget {
   const ProblemPage({super.key});
 
@@ -11,7 +16,7 @@ class ProblemPage extends StatefulWidget {
 
 class _ProblemPageState extends State<ProblemPage> {
   // TODO: 정답 오버레이 표시 여부를 관리하는 상태 변수 추가
-  bool _showAnswerOverlay = false;
+  AnswerStatus? _answerStatus; // 오버레이 상태를 AnswerStatus enum으로 관리
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +45,7 @@ class _ProblemPageState extends State<ProblemPage> {
         selectedItemColor: const Color(0xFF2D2A1E), // 선택된 아이템 색상 (이미지 기반)
         unselectedItemColor: const Color(0xFF8B6E4E), // 선택되지 않은 아이템 색상 (이미지 기반)
         backgroundColor: const Color(0xFFFFF8E2), // 네비게이션 바 배경색 (이미지 기반)
-        iconSize: 30.0, // 아이콘 크기 유지
+        iconSize: 25.0, // 아이콘 크기를 메인 페이지와 동일하게 변경
         onTap: (index) {
           // TODO: 탭 전환 로직 구현
         },
@@ -52,17 +57,27 @@ class _ProblemPageState extends State<ProblemPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 상단 로고 헤더
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 16.0), // 기존 헤더 패딩 유지
-                child: Center(
-                  child: Image.asset(
-                    'assets/images/onboarding.png', // 로고 이미지 경로
-                    height: 40.0, // 이미지 높이 유지
+              // 헤더 콘텐츠 (메인 페이지와 동일한 구조)
+              SafeArea( // 헤더 콘텐츠에만 SafeArea 적용하여 상태 표시줄 아래 배치
+                bottom: false, // 하단 시스템 바 영역은 피하지 않음
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0), // 원래 수직 패딩 유지
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 상단 이미지 (onboarding.png)
+                      Center(
+                        child: Image.asset(
+                          'assets/images/onboarding.png', // 이미지 파일 경로
+                          height: 50.0, // 이미지 높이
+                        ),
+                      ),
+                      const SizedBox(height: 18.0), // 이미지와 구분선 사이 간격
+                      const Divider(height: 1.0, thickness: 0.5, color: Colors.grey), // 새로운 구분선 추가
+                    ],
                   ),
                 ),
               ),
-              const Divider(height: 1.0, thickness: 0.5, color: Colors.grey), // 헤더 하단 구분선
 
               Expanded(
                 child: Center(
@@ -119,51 +134,57 @@ class _ProblemPageState extends State<ProblemPage> {
                         const SizedBox(height: 64.0), // 문제 텍스트와 버튼 사이 간격
 
                         // 선택 버튼 1
-                        ElevatedButton(
-                          onPressed: () {
-                            // TODO: 첫 번째 버튼 액션
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFF8E2), // a97700 색상 배경
-                            foregroundColor: Colors.black, // 글자색 검은색으로 변경
-                            padding: const EdgeInsets.symmetric(horizontal: 48.0, vertical: 16.0), // 패딩
-                            shape: RoundedRectangleBorder(
-                              side: const BorderSide(color: Colors.black, width: 1.0), // 검은색 윤곽선 추가
-                              borderRadius: BorderRadius.circular(30.0), // 둥근 모서리
+                        SizedBox(
+                          width: 250.0,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _answerStatus = AnswerStatus.incorrect; // 오답 선택
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white, // 흰색 배경
+                              foregroundColor: Colors.black, // 글자색 검은색으로 변경
+                              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0), // 패딩 조정
+                              shape: RoundedRectangleBorder(
+                                side: const BorderSide(color: Colors.black, width: 1.0), // 검은색 윤곽선 추가
+                                borderRadius: BorderRadius.circular(30.0), // 둥근 모서리
+                              ),
+                              elevation: 0, // 그림자 효과 제거
                             ),
-                            elevation: 0, // 그림자 효과 제거
-                            minimumSize: const Size(double.infinity, 50), // 너비를 double.infinity로 설정
-                          ),
-                          child: const Text(
-                            '하던지 말던지',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                            child: const Text(
+                              '하던지 말던지',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16.0), // 버튼 사이 간격
 
                         // 선택 버튼 2 (정답)
-                        ElevatedButton(
-                          onPressed: () {
-                            // TODO: 이 버튼이 정답을 선택했을 때의 액션
-                            setState(() {
-                              _showAnswerOverlay = true;
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFF8E2), // a97700 색상 배경
-                            foregroundColor: Colors.black, // 글자색 검은색으로 변경
-                            padding: const EdgeInsets.symmetric(horizontal: 48.0, vertical: 16.0), // 패딩
-                            shape: RoundedRectangleBorder(
-                              side: const BorderSide(color: Colors.black, width: 1.0), // 검은색 윤곽선 추가
-                              borderRadius: BorderRadius.circular(30.0), // 둥근 모서리
+                        SizedBox(
+                          width: 250.0,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // TODO: 이 버튼이 정답을 선택했을 때의 액션
+                              setState(() {
+                                _answerStatus = AnswerStatus.correct;
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white, // 흰색 배경
+                              foregroundColor: Colors.black, // 글자색 검은색으로 변경
+                              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0), // 패딩 조정
+                              shape: RoundedRectangleBorder(
+                                side: const BorderSide(color: Colors.black, width: 1.0), // 검은색 윤곽선 추가
+                                borderRadius: BorderRadius.circular(30.0), // 둥근 모서리
+                              ),
+                              elevation: 0, // 그림자 효과 제거
                             ),
-                            elevation: 0, // 그림자 효과 제거
-                            minimumSize: const Size(double.infinity, 50), // 너비를 double.infinity로 설정
-                          ),
-                          child: const Text(
-                            '하든지 말든지',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold, // 텍스트 볼드체
+                            child: const Text(
+                              '하든지 말든지',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold, // 텍스트 볼드체
+                              ),
                             ),
                           ),
                         ),
@@ -178,13 +199,13 @@ class _ProblemPageState extends State<ProblemPage> {
             ],
           ),
           // TODO: 오버레이 조건부 표시
-          if (_showAnswerOverlay) _buildAnswerOverlay(context),
+          if (_answerStatus != null) _buildAnswerOverlay(context, _answerStatus!),
         ],
       ),
     );
   }
 
-  Widget _buildAnswerOverlay(BuildContext context) {
+  Widget _buildAnswerOverlay(BuildContext context, AnswerStatus status) {
     return Stack(
       children: [
         // 배경 블러 처리
@@ -204,9 +225,9 @@ class _ProblemPageState extends State<ProblemPage> {
         Align(
           alignment: Alignment(0.0, 0.2), // 세로 방향으로 0.2만큼 이동 (아래로)
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 42.0), // 이전 상태로 되돌림
+            padding: const EdgeInsets.symmetric(horizontal: 42.0), // 오버레이 전체 좌우 여백을 이전 상태로 되돌림
             child: AspectRatio(
-              aspectRatio: 0.65, // 이전 상태로 되돌림
+              aspectRatio: 0.65, // 가로/세로 비율을 이전 상태로 되돌림
               child: Container(
                 padding: const EdgeInsets.all(24.0), // 내부 패딩 (상하좌우 24.0 유지)
                 decoration: BoxDecoration(
@@ -214,34 +235,34 @@ class _ProblemPageState extends State<ProblemPage> {
                   borderRadius: BorderRadius.circular(20.0), // 둥근 모서리
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // 콘텐츠 크기만큼만 높이 차지 (세로 길이 최소화)
+                  mainAxisSize: MainAxisSize.min, // 콘텐츠 크기만큼만 높이 차지 (세로 길이 최소화) - 이전 상태로 되돌림
                   mainAxisAlignment: MainAxisAlignment.center, // 세로 중앙 정렬
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
-                    // 정답 이미지 (right.png)
+                    // 정답/오답 이미지
                     Image.asset(
-                      'assets/images/right.png', // 정답 이미지 경로
-                      height: 120.0, // 이미지 높이 추가 조정
+                      status == AnswerStatus.correct ? 'assets/images/right.png' : 'assets/images/wrong.png', // status에 따라 이미지 변경
+                      height: 120.0, // 이미지 높이를 이전 상태로 되돌림
                     ),
-                    const SizedBox(height: 8.0), // 이미지와 텍스트 사이 간격 추가 조정
+                    const SizedBox(height: 8.0), // 이미지와 텍스트 사이 간격을 이전 상태로 되돌림
 
-                    // 정답 텍스트 (이미지에서 OCR된 텍스트 사용)
-                    const Text(
-                      '정답입니다', // 이미지 참고
+                    // 정답/오답 텍스트
+                    Text(
+                      status == AnswerStatus.correct ? '정답입니다' : '틀렸습니다', // status에 따라 텍스트 변경
                       style: TextStyle(
-                        fontSize: 28, // 글자 크기 추가 조정
+                        fontSize: 28, // 글자 크기를 이전 상태로 되돌림
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFFE57373), // 이미지 참고 (연한 빨강)
+                        color: const Color(0xFFE57373), // 이미지 참고 (연한 빨강)
                       ),
                     ),
-                    const SizedBox(height: 8.0), // 정답 텍스트와 문제 텍스트 사이 간격 추가 조정
+                    const SizedBox(height: 8.0), // 정답 텍스트와 문제 텍스트 사이 간격을 이전 상태로 되돌림
 
                     // 문제 텍스트 및 해설 (이미지 참고)
                     RichText(
                       textAlign: TextAlign.center,
                       text: TextSpan(
                         style: const TextStyle(
-                          fontSize: 24, // 문제 텍스트 크기 추가 조정
+                          fontSize: 24, // 문제 텍스트 크기를 이전 상태로 되돌림
                           fontWeight: FontWeight.bold,
                           color: Colors.black, // 기본 텍스트 색상
                         ),
@@ -259,7 +280,7 @@ class _ProblemPageState extends State<ProblemPage> {
                           const TextSpan(
                             text: "‘-던’은 과거에 일어난 일을 회상하여\n말할 때 쓰는 어미입니다.\n따라서 하던지 말던지는 문법적으로\n맞지 않습니다.", // 이미지 참고
                             style: TextStyle(
-                              fontSize: 16, // 해설 텍스트 크기 추가 조정
+                              fontSize: 16, // 해설 텍스트 크기를 이전 상태로 되돌림
                               fontWeight: FontWeight.normal,
                               color: Colors.grey, // 이미지 참고
                             ),
@@ -267,7 +288,7 @@ class _ProblemPageState extends State<ProblemPage> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 28.0), // 해설과 버튼 사이 간격 추가 조정
+                    const SizedBox(height: 28.0), // 해설과 버튼 사이 간격을 이전 상태로 되돌림
 
                     // 다음 문제로 버튼
                     ElevatedButton(
@@ -275,19 +296,19 @@ class _ProblemPageState extends State<ProblemPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const ResultPage()),
-                        ); // TODO: 다음 문제 로직에 따라 pushReplacement 또는 다른 네비게이션 방식 고려
+                        ); // 정답/오답 여부와 상관없이 결과 페이지로 이동
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFA97700), // 이미지 참고 (약간 어두운 황토색)
+                        backgroundColor: const Color(0xFFC67C4E), // 0xFFC67C4E 색상으로 통일
                         foregroundColor: Colors.white, // 글자색 흰색
                         padding: const EdgeInsets.symmetric(horizontal: 48.0, vertical: 16.0), // 패딩
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30.0), // 둥근 모서리
                         ),
                       ),
-                      child: const Text(
-                        '다음 문제로', // 이미지 참고
-                        style: TextStyle(fontWeight: FontWeight.bold), // 볼드체
+                      child: Text(
+                        '다음 문제로', // 정답/오답 모두 '다음 문제로' 텍스트 사용
+                        style: const TextStyle(fontWeight: FontWeight.bold), // 볼드체
                       ),
                     ),
                   ],
