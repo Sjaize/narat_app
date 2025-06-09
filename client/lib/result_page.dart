@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
 import 'problem_page.dart';
 import 'main_page.dart'; // 홈으로 돌아가기 위한 메인 페이지 임포트
+import 'wrong_answer_note_page.dart'; // 오답노트 페이지 임포트
+import 'settings_page.dart'; // 설정 페이지 임포트
+import 'onboarding_page.dart'; // 온보딩 페이지 임포트
 
 class ResultPage extends StatelessWidget {
   final int score;
+  final List<dynamic>? wrongProblems; // 틀린 문제 목록을 받을 필드 추가
+  final String? sessionToken; // 세션 토큰 추가
+  final String? displayName; // 사용자 닉네임 추가
+  final String? studyLevel; // 학습 레벨 타입 String?으로 변경
 
   const ResultPage({
     super.key,
     this.score = 90, // 임시 기본값 90점
+    this.wrongProblems,
+    this.sessionToken, // 생성자에 추가
+    this.displayName, // 생성자에 닉네임 추가
+    this.studyLevel, // 생성자에 학습 레벨 추가
   });
 
   @override
@@ -145,34 +156,82 @@ class ResultPage extends StatelessWidget {
                         // 오답 목록 텍스트 (스크롤 가능하게)
                         Expanded( // Take remaining space in the fixed-height container
                           child: SingleChildScrollView(
-                            child: RichText(
-                              text: TextSpan(
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.black,
-                                ),
-                                children: <TextSpan>[
-                                  const TextSpan(text: '1. 일을 '),
-                                  TextSpan(
-                                    text: '하던지 말던지', // 이미지 참고
-                                    style: TextStyle(
-                                       color: Colors.red, // 이미지 참고 (빨간색)
-                                    ),
+                            child: wrongProblems != null && wrongProblems!.isNotEmpty
+                                ? Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: wrongProblems!.asMap().entries.map<Widget>((entry) {
+                                      final int index = entry.key;
+                                      final Map<String, dynamic> problem = entry.value;
+                                      final String wrongSentence = problem['wrong_sentence'];
+                                      final String rightSentence = problem['right_sentence'];
+                                      final String wrongWord = problem['wrong_word'];
+                                      final String explanation = problem['explanation'];
+
+                                      // 잘못된 단어의 시작과 끝 인덱스를 찾아 하이라이트하기 위한 준비
+                                      final int wrongWordStart = wrongSentence.indexOf(wrongWord);
+                                      final int wrongWordEnd = wrongWordStart + wrongWord.length;
+
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom: 16.0), // 각 문제 항목 아래 간격
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            // 문제 번호와 오답 문장을 RichText로 합침
+                                            RichText(
+                                              text: TextSpan(
+                                                style: const TextStyle(
+                                                  fontSize: 15, // 오답 문장의 기본 폰트 크기
+                                                  color: Colors.black, // 오답 문장의 기본 색상
+                                                ),
+                                                children: <TextSpan>[
+                                                  TextSpan(
+                                                    text: '${index + 1}. ', // 문제 번호 뒤에 공백 한 칸만 유지
+                                                    style: const TextStyle(
+                                                      fontSize: 16, // 문제 번호 폰트 크기
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                  if (wrongWordStart != -1) ...[
+                                                    TextSpan(text: wrongSentence.substring(0, wrongWordStart)),
+                                                    TextSpan(
+                                                      text: wrongWord,
+                                                      style: const TextStyle(
+                                                        color: Colors.red,
+                                                      ),
+                                                    ),
+                                                    TextSpan(text: wrongSentence.substring(wrongWordEnd)),
+                                                  ] else ...[
+                                                    TextSpan(text: wrongSentence),
+                                                  ],
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4.0), // 오답 문장과 정답 문장 사이 간격
+                                            Text(
+                                              '정답: $rightSentence',
+                                              style: const TextStyle(
+                                                fontSize: 15,
+                                                color: Colors.blueAccent,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4.0), // 정답 문장과 해설 사이 간격
+                                            Text(
+                                              '해설: $explanation',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                  )
+                                : const Text(
+                                    '틀린 문제가 없습니다.', // 틀린 문제가 없을 때 표시할 텍스트
+                                    style: TextStyle(fontSize: 16, color: Colors.grey),
                                   ),
-                                  const TextSpan(text: ''' 마음을 정해야지.'''), // 이미지 참고
-                                  const TextSpan(text: '''\n   하든지 말든지'''), // 이미지 참고 (수정: 삼중 따옴표 사용)
-                                  const TextSpan(text: '''\n\n'''), // 스크롤 테스트용 추가 내용 (수정: 삼중 따옴표 사용)
-                                  const TextSpan(text: '2. 다른 오답 문장입니다. 스크롤이 되는지 확인해보세요.'),
-                                  const TextSpan(text: '''\n   스크롤 테스트 텍스트 1'''), // 수정: 삼중 따옴표 사용
-                                  const TextSpan(text: '''\n   스크롤 테스트 텍스트 2'''), // 수정: 삼중 따옴표 사용
-                                  const TextSpan(text: '''\n   스크롤 테스트 텍스트 3'''), // 수정: 삼중 따옴표 사용
-                                  const TextSpan(text: '''\n   스크롤 테스트 텍스트 4'''), // 수정: 삼중 따옴표 사용
-                                  const TextSpan(text: '''\n   스크롤 테스트 텍스트 5'''), // 수정: 삼중 따옴표 사용
-                                  const TextSpan(text: '''\n   스크롤 테스트 텍스트 6'''), // 수정: 삼중 따옴표 사용
-                                  const TextSpan(text: '''\n   스크롤 테스트 텍스트 7'''), // 수정: 삼중 따옴표 사용
-                                ],
-                              ),
-                            ),
                           ),
                         ),
                       ],
@@ -185,11 +244,20 @@ class ResultPage extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 48.0), // 버튼 좌우 여백을 줄여 사이즈 조정
                     child: Column(
                       children: [
-                        // 다시 도전하기 버튼
+                        // 문제 추천받기 버튼
                         ElevatedButton(
                           onPressed: () {
-                            // TODO: 다시 도전하기 액션
-                            // Navigator.pushReplacementNamed(context, '/problem');
+                            // 새로운 문제 추천을 위해 MainPage로 이동
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => MainPage(
+                                sessionToken: sessionToken,
+                                fetchRecommendationsOnLoad: true,
+                                displayName: displayName, // 닉네임 전달
+                                studyLevel: studyLevel, // 학습 레벨 전달
+                              )),
+                              (Route<dynamic> route) => false,
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF2D2A1E), // main_page의 버튼 색상으로 변경
@@ -206,7 +274,7 @@ class ResultPage extends StatelessWidget {
                             minimumSize: const Size(double.infinity, 50), // 너비를 double.infinity로 설정
                           ),
                           child: const Text(
-                            '다시 도전하기', // 이미지 참고
+                            '문제 추천받기', // 텍스트 변경
                           ),
                         ),
                         const SizedBox(height: 16.0), // 버튼 사이 간격
@@ -242,7 +310,12 @@ class ResultPage extends StatelessWidget {
                             // 홈으로 돌아가기 액션
                              Navigator.pushAndRemoveUntil(
                                context,
-                               MaterialPageRoute(builder: (context) => const MainPage()),
+                               MaterialPageRoute(builder: (context) => MainPage(
+                                 sessionToken: sessionToken,
+                                 displayName: displayName,
+                                 studyLevel: studyLevel,
+                                 fetchRecommendationsOnLoad: false,
+                               )),
                                (Route<dynamic> route) => false, // 모든 이전 라우트 제거
                              );
                           },
@@ -277,27 +350,137 @@ class ResultPage extends StatelessWidget {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home), // 홈 아이콘
+            icon: Icon(Icons.home),
             label: '홈',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.check_box), // 하트 아이콘을 체크 박스 아이콘으로 변경
-            label: '오답노트', // '찜'을 '오답노트'로 변경
+            icon: Icon(Icons.check_box),
+            label: '오답노트',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings), // 설정 아이콘
-            label: '설정',
+            icon: Icon(Icons.power_settings_new), // 종료에 어울리는 파워 아이콘
+            label: '종료',
           ),
         ],
         currentIndex: 0, // TODO: 현재 선택된 탭 인덱스 관리
-        selectedItemColor: const Color(0xFF2D2A1E), // 선택된 아이템 색상 (이미지 기반)
-        unselectedItemColor: const Color(0xFF8B6E4E), // 선택되지 않은 아이템 색상 (이미지 기반)
-        backgroundColor: const Color(0xFFFFF8E2), // 네비게이션 바 배경색 (이미지 기반)
-        iconSize: 25.0, // 아이콘 크기 (메인/문제 페이지와 동일)
+        selectedItemColor: const Color(0xFF2D2A1E),
+        unselectedItemColor: const Color(0xFF8B6E4E),
+        backgroundColor: const Color(0xFFFFF8E2),
+        iconSize: 25.0,
         onTap: (index) {
-          // TODO: 탭 전환 로직 구현
+          if (index == 0) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MainPage(
+                  sessionToken: sessionToken,
+                  displayName: displayName,
+                  studyLevel: studyLevel,
+                  fetchRecommendationsOnLoad: false,
+                ),
+              ),
+              (Route<dynamic> route) => false,
+            );
+          } else if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => WrongAnswerNotePage(
+                  sessionToken: sessionToken,
+                  displayName: displayName,
+                  studyLevel: studyLevel,
+                ),
+              ),
+            );
+          } else if (index == 2) {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return Center(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      width: MediaQuery.of(context).size.width * 0.85,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            top: -13,
+                            right: -5,
+                            child: IconButton(
+                              icon: const Icon(Icons.close, size: 36, color: Colors.black45),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(height: 8),
+                              Image.asset('assets/images/quit.png', height: 80),
+                              const SizedBox(height: 16),
+                              const Text(
+                                '그만 두시나요?',
+                                style: TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                '진행상황은 저장되지 않습니다.',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Center(
+                                child: SizedBox(
+                                  width: 180,
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pushAndRemoveUntil(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => const OnboardingPage()),
+                                        (Route<dynamic> route) => false,
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF2D2A1E),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(48.0),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                                      textStyle: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      elevation: 6.0,
+                                    ),
+                                    child: const Text('나가기'),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          }
         },
-        type: BottomNavigationBarType.fixed, // 탭이 4개 이상일 때 고정
+        type: BottomNavigationBarType.fixed,
       ),
     );
   }

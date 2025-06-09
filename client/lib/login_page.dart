@@ -2,9 +2,95 @@ import 'package:flutter/material.dart';
 import 'package:my_flutter_app/signup_page.dart'; // 회원가입 페이지로 이동하기 위해 import
 import 'package:flutter_svg/flutter_svg.dart'; // SVG 이미지 사용을 위해 import
 import 'package:my_flutter_app/main_page.dart'; // 메인 페이지로 이동하기 위해 import
+import 'package:http/http.dart' as http; // http 패키지 임포트
+import 'dart:convert'; // JSON 처리를 위한 임포트
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget { // StatelessWidget에서 StatefulWidget으로 변경
   const LoginPage({Key? key}) : super(key: key);
+
+  @override
+  _LoginPageState createState() => _LoginPageState(); // State 생성
+}
+
+class _LoginPageState extends State<LoginPage> { // State 클래스 정의
+  final TextEditingController _idController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _idController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  // 로그인 로직 함수
+  Future<void> _login() async {
+    final String id = _idController.text; // 아이디로 사용
+    final String password = _passwordController.text;
+
+    // 백엔드 URL (로컬에서 테스트 시 IP 주소 또는 localhost 사용)
+    const String apiUrl = 'http://10.0.2.2:8000/api/auth/login'; // 백엔드 API 주소
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'email': id, // 백엔드는 email 필드를 사용
+          'password': password,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // 성공적으로 로그인
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+        final String? sessionToken = responseBody['token']; // 세션 토큰 추출
+        final String? displayName = responseBody['display_name']; // 닉네임 추출
+        final String? studyLevel = responseBody['study_level']; // 학습 레벨 추출 (문자열로 유지)
+        
+        _showAlertDialog('성공', '로그인이 완료되었습니다.');
+        
+        // TODO: 로그인 성공 후 세션 토큰 등을 안전하게 저장하는 로직 추가 (예: shared_preferences)
+        if (sessionToken != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MainPage(sessionToken: sessionToken, displayName: displayName, studyLevel: studyLevel)), // 세션 토큰, 닉네임, 학습 레벨 전달
+          );
+        } else {
+          _showAlertDialog('오류', '세션 토큰을 받지 못했습니다. 다시 시도해주세요.');
+        }
+      } else if (response.statusCode == 400) {
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+        _showAlertDialog('오류', responseBody['detail'] ?? '로그인에 실패했습니다.');
+      } else {
+        _showAlertDialog('오류', '서버 오류가 발생했습니다. 다시 시도해주세요.');
+      }
+    } catch (e) {
+      _showAlertDialog('오류', '네트워크 오류가 발생했습니다: $e');
+    }
+  }
+
+  void _showAlertDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('확인'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +115,9 @@ class LoginPage extends StatelessWidget {
               ),
               const SizedBox(height: 32.0), // 제목과 첫 번째 입력 필드 간 간격
 
-              // 이메일 입력 필드
+              // 아이디 입력 필드
               const Text(
-                '이메일',
+                '아이디',
                 style: TextStyle(
                   fontSize: 14,
                   color: Color(0xFF8B6E4C), // 이미지 기반 색상 (갈색 계열)
@@ -39,11 +125,12 @@ class LoginPage extends StatelessWidget {
               ),
               const SizedBox(height: 4.0), // 라벨과 입력 필드 간 간격
               TextField(
-                keyboardType: TextInputType.emailAddress,
+                controller: _idController, // 아이디 컨트롤러 연결
+                keyboardType: TextInputType.emailAddress, // 이메일 주소 형식 키보드
                 decoration: InputDecoration(
-                  hintText: '이메일을 입력하세요',
+                  hintText: '아이디를 입력하세요',
                   hintStyle: const TextStyle(color: Color(0xFF9CA3AF)), // 이미지 기반 색상
-                  prefixIcon: const Icon(Icons.email, color: Color(0xFF6B7280)), // 이미지 기반 아이콘
+                  prefixIcon: const Icon(Icons.person, color: Color(0xFF6B7280)), // 이미지 기반 아이콘
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(48.0), // 이미지 기반 둥근 모서리
                     borderSide: const BorderSide(color: Color(0xFFFDE68A)), // 이미지 기반 테두리 색상 (노란색 계열)
@@ -73,7 +160,8 @@ class LoginPage extends StatelessWidget {
               ),
               const SizedBox(height: 4.0),
               TextField(
-                obscureText: true,
+                controller: _passwordController, // 비밀번호 컨트롤러 연결
+                obscureText: true, // 비밀번호 숨김
                 decoration: InputDecoration(
                   hintText: '비밀번호를 입력하세요',
                   hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
@@ -100,13 +188,7 @@ class LoginPage extends StatelessWidget {
 
               // 로그인 버튼
               ElevatedButton(
-                onPressed: () {
-                  // TODO: 실제 로그인 로직 구현 후 이동
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const MainPage()), // 메인 페이지로 이동
-                  );
-                },
+                onPressed: _login,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2D2A1E), // 이미지 기반 배경색 (어두운 갈색)
                   foregroundColor: Colors.white, // 글자색 흰색

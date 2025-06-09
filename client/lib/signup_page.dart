@@ -1,8 +1,96 @@
 import 'package:flutter/material.dart';
 import 'package:my_flutter_app/login_page.dart'; // 로그인 페이지 import
+import 'package:http/http.dart' as http; // http 패키지 임포트
+import 'dart:convert'; // JSON 처리를 위한 임포트
 
-class SignupPage extends StatelessWidget {
+class SignupPage extends StatefulWidget { // StatelessWidget에서 StatefulWidget으로 변경
   const SignupPage({Key? key}) : super(key: key);
+
+  @override
+  _SignupPageState createState() => _SignupPageState(); // State 생성
+}
+
+class _SignupPageState extends State<SignupPage> { // State 클래스 정의
+  final TextEditingController _nicknameController = TextEditingController();
+  final TextEditingController _idController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nicknameController.dispose();
+    _idController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  // 회원가입 로직 함수
+  Future<void> _signup() async {
+    final String nickname = _nicknameController.text;
+    final String id = _idController.text; // 아이디로 사용
+    final String password = _passwordController.text;
+    final String confirmPassword = _confirmPasswordController.text;
+
+    if (password != confirmPassword) {
+      _showAlertDialog('오류', '비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    // 백엔드 URL (로컬에서 테스트 시 IP 주소 또는 localhost 사용)
+    // 실제 배포 시에는 서버 도메인으로 변경해야 합니다.
+    const String apiUrl = 'http://10.0.2.2:8000/api/auth/signup'; // 백엔드 API 주소
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'email': id, // 백엔드는 email 필드를 사용
+          'password': password,
+          'display_name': nickname,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // 성공적으로 회원가입
+        _showAlertDialog('성공', '회원가입이 완료되었습니다. 로그인 해주세요.');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      } else if (response.statusCode == 400) {
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+        _showAlertDialog('오류', responseBody['detail'] ?? '회원가입에 실패했습니다.');
+      } else {
+        _showAlertDialog('오류', '서버 오류가 발생했습니다. 다시 시도해주세요.');
+      }
+    } catch (e) {
+      _showAlertDialog('오류', '네트워크 오류가 발생했습니다: $e');
+    }
+  }
+
+  void _showAlertDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('확인'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +120,9 @@ class SignupPage extends StatelessWidget {
               ),
               const SizedBox(height: 32.0), // 이전 설명 텍스트와 첫 번째 입력 필드 간 간격
 
-              // 이름 입력 필드
+              // 닉네임 입력 필드
               const Text(
-                '이름',
+                '닉네임',
                 style: TextStyle(
                   fontSize: 14,
                   color: Color(0xFF8B6E4C), // 이미지 기반 색상 (갈색 계열)
@@ -42,8 +130,9 @@ class SignupPage extends StatelessWidget {
               ),
               const SizedBox(height: 4.0), // 라벨과 입력 필드 간 간격
               TextField(
+                controller: _nicknameController,
                 decoration: InputDecoration(
-                  hintText: '이름을 입력하세요',
+                  hintText: '닉네임을 입력하세요',
                   hintStyle: const TextStyle(color: Color(0xFF9CA3AF)), // 이미지 기반 색상
                   prefixIcon: const Icon(Icons.person, color: Color(0xFF6B7280)), // 이미지 기반 아이콘
                   border: OutlineInputBorder(
@@ -65,9 +154,9 @@ class SignupPage extends StatelessWidget {
               ),
               const SizedBox(height: 20.0), // 입력 필드 간 간격
 
-              // 이메일 입력 필드
+              // 아이디 입력 필드
               const Text(
-                '이메일',
+                '아이디',
                 style: TextStyle(
                   fontSize: 14,
                   color: Color(0xFF8B6E4C),
@@ -75,11 +164,11 @@ class SignupPage extends StatelessWidget {
               ),
               const SizedBox(height: 4.0),
               TextField(
-                keyboardType: TextInputType.emailAddress,
+                controller: _idController,
                 decoration: InputDecoration(
-                  hintText: '이메일을 입력하세요',
+                  hintText: '아이디를 입력하세요',
                   hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
-                  prefixIcon: const Icon(Icons.email, color: Color(0xFF6B7280)), // 이미지 기반 아이콘
+                  prefixIcon: const Icon(Icons.person, color: Color(0xFF6B7280)), // 이미지 기반 아이콘
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(48.0),
                     borderSide: const BorderSide(color: Color(0xFFFDE68A)),
@@ -109,6 +198,7 @@ class SignupPage extends StatelessWidget {
               ),
               const SizedBox(height: 4.0),
               TextField(
+                controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: '비밀번호를 입력하세요',
@@ -143,6 +233,7 @@ class SignupPage extends StatelessWidget {
               ),
               const SizedBox(height: 4.0),
               TextField(
+                controller: _confirmPasswordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: '비밀번호를 다시 입력하세요',
@@ -170,13 +261,7 @@ class SignupPage extends StatelessWidget {
 
               // 회원가입 버튼
               ElevatedButton(
-                onPressed: () {
-                  // TODO: 실제 회원가입 로직 구현 후 이동
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()), // 로그인 페이지로 이동
-                  );
-                },
+                onPressed: _signup,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2D2A1E), // 이미지 기반 배경색 (어두운 갈색)
                   foregroundColor: Colors.white, // 글자색 흰색
@@ -237,3 +322,4 @@ class SignupPage extends StatelessWidget {
     );
   }
 }
+ 
